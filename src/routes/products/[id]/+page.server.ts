@@ -1,4 +1,4 @@
-import { addToCart, loadCart } from '$lib/server/cart';
+import { addToCart, loadCartItems } from '$lib/server/cart';
 import { error } from 'console';
 import { loadProducts } from '$lib/server/product';
 
@@ -19,24 +19,30 @@ async function getRelatedProductsFromDatabase(productId: string) {
 	return products.filter((product) => productId !== product.id);
 }
 
-export async function load({ params }) {
+export async function load({ locals, params }) {
 	const productId = params.id;
 	const product = await getProductFromDatabase(productId);
 	const relatedProducts = await getRelatedProductsFromDatabase(productId);
-	const cart = await loadCart();
+	let cart: any[] = [];
+	if (locals.currentUser) {
+		cart = await loadCartItems(locals.currentUser.userId);
+	}
 
 	return { product, relatedProducts, cart };
 }
 
 export const actions = {
-	default: async ({ request }) => {
-		const data = await request.formData();
-		const productId = data.get('productId');
+	default: async ({ locals, request }) => {
+		if (locals.currentUser) {
+			const data = await request.formData();
 
-		if (typeof productId !== 'string') {
-			throw error(400, 'Invalid productId');
+			const productId = data.get('productId');
+
+			if (typeof productId !== 'string') {
+				return;
+			}
+
+			await addToCart(locals.currentUser.userId, productId);
 		}
-
-		await addToCart(productId);
 	}
 };
