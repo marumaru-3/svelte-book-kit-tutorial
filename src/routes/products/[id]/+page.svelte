@@ -6,6 +6,8 @@
 
 	import type { PageData } from './$types';
 
+	import { page } from '$app/state';
+
 	let { data } = $props<{ data: PageData }>();
 
 	const product = $derived(data.product);
@@ -28,6 +30,13 @@
 		console.log(userRequest);
 	});
 </script>
+
+<svelte:head>
+	<meta name="twitter:card" content="summary" />
+	<meta property="og:type" content="website" /> <meta property="og:url" content={page.url.href} />
+	<meta property="og:title" content={product.name} />
+	<meta property="og:description" content={`${product.name} - ${product.price}円`} />
+</svelte:head>
 
 <header class="header">
 	<a class="header-title" href="/">Svelte EC</a>
